@@ -9,7 +9,8 @@ const apiProxy = httpProxy.createProxyServer();
 
 // TODO:
 //  - handle container exit
-
+//  - dynamic container name
+//
 const wetty = {
     Image: 'git-wetty',
     name: 'git-wetty',
@@ -20,9 +21,13 @@ const wetty = {
 };
 
 const users = new Map();
-
-function shutdown() {
-    console.log("Quitting, please wait...");
+let shutdownRunning = false;
+function shutdown(sig) {
+    if (shutdownRunning) {
+      return;
+    }
+    shutdownRunning = true;
+    console.log("Quitting, please wait...", sig);
     for (let [user, container] of users) {
         console.log('Stopping and removing container of user', user, '...');
         container.stop().then(container => container.delete()).then(_ => process.exit());
@@ -34,9 +39,10 @@ function forward(req, res, user, status) {
     console.log('Waiting for container for user', user, 'to become available...');
     waitForPort(ip, 4123, (err) => {
         console.log('Container for user', user, 'is now running!:', ip, req.url);
-        req.url = '';
+        req.url = req.params['1'];
+	console.log('New url:', req.url);
         apiProxy.web(req, res, {
-            target: 'http://' + ip + ':4123/index.html',
+            target: 'http://' + ip + ':4123',
         });
     });
 }
@@ -44,9 +50,10 @@ function forward(req, res, user, status) {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
-app.all('/terminal/:user', (req, res, next) => {
-    let user = req.params.user;
-
+const handler = (req, res, next) => {
+    console.log(req.params);
+    let user = req.params['0'];
+    console.log(user);
     if (users.has(user)) {
         users.get(user).status().then(forward.bind(null, req, res, user));
     } else {
@@ -59,6 +66,8 @@ app.all('/terminal/:user', (req, res, next) => {
             .then(container => container.status())
             .then(forward.bind(null, req, res, user));
     }
-});
+};
+
+app.all(/^\/terminal\/([a-zA-Z0-9\-]*)(.*)$/, handler);
 
 app.listen(8000);
