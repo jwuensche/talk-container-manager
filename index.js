@@ -28,6 +28,8 @@ function shutdown(sig) {
     }
     shutdownRunning = true;
     console.log("Quitting, please wait...", sig);
+
+    // TODO: use promise.all or sth to prevent early exit after first container
     for (let [user, container] of users) {
         console.log('Stopping and removing container of user', user, '...');
         container.stop().then(container => container.delete()).then(_ => process.exit());
