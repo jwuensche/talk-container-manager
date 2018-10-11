@@ -1,0 +1,25 @@
+.toolbar {
+    margin-top: 1rem;
+    display: flex;
+    align-items: baseline;
+}
+
+.toolbar > .input-field {
+    flex-grow: 1;
+}
+
+.toolbar > .btn {
+    margin-left: 1rem;
+}
+
+.row.terminal {
+    display: flex;
+    justify-content: center;
+}
+
+.console {
+    display: block;
+    width:  calc(4vw * 18);
+    height: calc(3vw * 18);
+    border: none;
+}
