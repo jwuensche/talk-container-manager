@@ -9,8 +9,8 @@ const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 const app = express();
 const apiProxy = httpProxy.createProxyServer();
 
-const ENV_PORT = 8000;
-const ENV_DOCKER_IMAGE = 'git-wetty';
+const ENV_PORT = process.env.ENV_PORT || 8000;
+const ENV_DOCKER_IMAGE = process.env.ENV_DOCKER_IMAGE || 'fin1ger/wetty';
 
 const wetty = {
     Image: ENV_DOCKER_IMAGE,
@@ -90,14 +90,14 @@ app.all(/^\/terminal\/([^/]*)(.*)$/, (req, res, next) => {
             });
     } else {
         log.info(`Starting new container for user ${user}...`);
-        docker.container.create({ ...wetty, name: `${wetty.Image}-${user}` })
+        docker.container.create({ ...wetty, name: `talk-${user}` })
             .then(container => {
                 users.set(user, container);
                 return container.start();
             })
             .then(container => container.status())
             .then(forward.bind(null, req, res, user))
-            .catch(_ => {
+            .catch(e => {
                 log.error(`Container for user ${user} failed to start!`);
                 res.status(500).send('Internal Server Error');
             });
