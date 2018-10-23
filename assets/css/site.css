@@ -21,5 +21,6 @@
     display: block;
     width:  calc(4vw * 18);
     height: calc(3vw * 18);
+    max-height: 80vh;
     border: none;
 }
